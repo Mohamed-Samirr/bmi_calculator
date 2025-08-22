@@ -268,7 +268,7 @@ class _bmiScreenState extends State<bmiScreen> {
             SizedBox(height: 56),
             ElevatedButton(
               onPressed: () {
-                onTap: () {
+               
                 var bmi = weight / (_height * _height) * 10000;
                 var result = "";
                 switch (bmi) {
@@ -286,8 +286,8 @@ class _bmiScreenState extends State<bmiScreen> {
                 showAlertDialog(context, title: result);
                 print(bmi.toString());
               
-              };
-              },
+              }, 
+             
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 minimumSize: Size(379, 50),
