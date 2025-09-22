@@ -1,14 +1,18 @@
+import 'package:bmi_calculator/bloc/cubit/bmi_cubit.dart';
+import 'package:bmi_calculator/bloc/cubit/bmi_state.dart';
 import 'package:flutter/material.dart';
-enum SexType { MALE,FEMALE}
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class bmiScreen extends StatefulWidget {
-  const bmiScreen({super.key});
+enum SexType { MALE, FEMALE }
+
+class BmiScreen extends StatefulWidget {
+  const BmiScreen({super.key});
 
   @override
-  State<bmiScreen> createState() => _bmiScreenState();
+  State<BmiScreen> createState() => _BmiScreenState();
 }
 
-class _bmiScreenState extends State<bmiScreen> {
+class _BmiScreenState extends State<BmiScreen> {
   double _height = 150;
   double weight = 0;
   double age = 0;
@@ -266,56 +270,104 @@ class _bmiScreenState extends State<bmiScreen> {
               ],
             ),
             SizedBox(height: 56),
-            ElevatedButton(
-              onPressed: () {
-               
-                var bmi = weight / (_height * _height) * 10000;
-                var result = "";
-                switch (bmi) {
-                  case < 18.5:
-                    result = "Underweight";
-                  case >= 18.5 && <= 24.9:
-                    result = "Normal weight";
-                  case >= 25 && <= 29.9:
-                    result = "Overweight";
-
-                  default:
-                    result = "Obese";
+            BlocConsumer<BmiCubit, BmiState>(
+              listener: (context, state) {
+                if (state.isCalculated && state.message != null) {
+                  showAlertDialog(context, title: state.message!);
                 }
-
-                showAlertDialog(context, title: result);
-                print(bmi.toString());
-              
-              }, 
-             
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                minimumSize: Size(379, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                "Let's go",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              },
+              builder: (context, state) {
+                return ElevatedButton(
+                  onPressed: () {
+                    // Use BmiCubit to calculate BMI
+                    context.read<BmiCubit>().calculateBmi(
+                          weight: weight,
+                          height: _height,
+                          age: age.toInt(),
+                        );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    minimumSize: const Size(379, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "Let's go",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
       ),
+      // Add a floating action button to reset the calculation
+      floatingActionButton: BlocBuilder<BmiCubit, BmiState>(
+        builder: (context, state) {
+          if (state.isCalculated) {
+            return FloatingActionButton(
+              onPressed: () {
+                context.read<BmiCubit>().resetCalculation();
+              },
+              backgroundColor: Colors.blue,
+              child: const Icon(Icons.refresh, color: Colors.white),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }
- void showAlertDialog(BuildContext context, {required String title}) {
-    AlertDialog alert = AlertDialog(title: Text(title));
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
+
+void showAlertDialog(BuildContext context, {required String title}) {
+  final state = context.read<BmiCubit>().state;
+  
+  AlertDialog alert = AlertDialog(
+    title: Text(title),
+    content: state.bmiResult != null 
+      ? Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('BMI: ${state.bmiResult!.toStringAsFixed(2)}'),
+            const SizedBox(height: 10),
+            Text(
+              'Category: ${state.message}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: _getCategoryColor(state.category),
+              ),
+            ),
+          ],
+        )
+      : null,
+  );
+  
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+Color _getCategoryColor(BMIResultCategory? category) {
+  switch (category) {
+    case BMIResultCategory.underweight:
+      return Colors.blue;
+    case BMIResultCategory.normalWeight:
+      return Colors.green;
+    case BMIResultCategory.overweight:
+      return Colors.orange;
+    case BMIResultCategory.obese:
+      return Colors.red;
+    default:
+      return Colors.black;
   }
+}

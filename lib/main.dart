@@ -1,21 +1,27 @@
+import 'package:bmi_calculator/bloc/cubit/bmi_cubit.dart';
 import 'package:bmi_calculator/screen.dart';
 import 'package:flutter/material.dart';
-void main () {
-  runApp( bmiCalculator());
-}
-class bmiCalculator extends StatefulWidget {
-  const bmiCalculator({super.key});
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-  @override
-  State<bmiCalculator> createState() => _bmiCalculatorState();
+void main() {
+  runApp(const BmiCalculator());
 }
 
-class _bmiCalculatorState extends State<bmiCalculator> {
+class BmiCalculator extends StatelessWidget {
+  const BmiCalculator({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: bmiScreen(),
+    return BlocProvider(
+      create: (context) => BmiCubit(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primaryColor: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const BmiScreen(),
+      ),
     );
   }
 }
